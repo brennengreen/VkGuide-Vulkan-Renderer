@@ -7,6 +7,8 @@
 #include <vk_types.h>
 #include <vk_initializers.h>
 
+#include <iostream>
+
 void VulkanEngine::init()
 {
 	// We initialize SDL and create a window with it. 
@@ -50,8 +52,19 @@ void VulkanEngine::run()
 		//Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
-			//close the window when user alt-f4s or clicks the X button			
-			if (e.type == SDL_QUIT) bQuit = true;
+			switch(e.type) {
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				if (e.key.keysym.sym <= 127) std::cout << static_cast<char>(e.key.keysym.sym) << ":";
+				std::cout << "Dec. Code: "<< e.key.keysym.sym << std::endl;
+				break;
+			case SDL_QUIT:
+				//close the window when user alt-f4s or clicks the X button	
+				bQuit = true;
+				break;
+			default:
+				break;
+			}
 		}
 
 		draw();
