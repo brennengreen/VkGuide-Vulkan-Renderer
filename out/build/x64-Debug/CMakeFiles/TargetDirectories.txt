@@ -1,0 +1,11 @@
+D:/dev/projects/vkguide/out/build/x64-Debug/CMakeFiles/Shaders.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/third_party/CMakeFiles/vkbootstrap.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/third_party/CMakeFiles/tinyobjloader.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/third_party/CMakeFiles/edit_cache.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/third_party/CMakeFiles/imgui.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/third_party/CMakeFiles/rebuild_cache.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/src/CMakeFiles/rebuild_cache.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/src/CMakeFiles/vulkan_guide.dir
+D:/dev/projects/vkguide/out/build/x64-Debug/src/CMakeFiles/edit_cache.dir
