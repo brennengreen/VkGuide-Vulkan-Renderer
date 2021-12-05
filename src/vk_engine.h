@@ -4,10 +4,39 @@
 #pragma once
 
 #include <vk_types.h>
-#include <vector>
+
+struct PipelineBuilder {
+	std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
+	VkPipelineVertexInputStateCreateInfo _vertexInputInfo;
+	VkPipelineInputAssemblyStateCreateInfo _inputAssembly;
+	VkViewport _viewport;
+	VkRect2D _scissor;
+	VkPipelineRasterizationStateCreateInfo _rasterizer;
+	VkPipelineColorBlendAttachmentState _colorBlendAttachment;
+	VkPipelineMultisampleStateCreateInfo _multisampling;
+	VkPipelineLayout _pipelineLayout;
+
+	VkPipeline build_pipeline(VkDevice device, VkRenderPass pass);
+};
+
+struct DeletionQueue {
+	std::deque<std::function<void()>> deletors;
+
+	void push_function(std::function<void()>&& function) {
+		deletors.push_back(function);
+	}
+
+	void flush() {
+		for (auto it = deletors.rbegin(); it != deletors.rend(); it++) (*it)();
+		deletors.clear();
+	}
+};
 
 class VulkanEngine {
 public:
+
+	// Cleanup
+	DeletionQueue _mainDeletionQueue;
 
 	// Vulkan Initilization Members
 	VkInstance _instance;
@@ -36,6 +65,15 @@ public:
 	VkSemaphore _presentSemaphore, _renderSemaphore;
 	VkFence _renderFence;
 
+	// Graphics Pipeline
+	VkPipelineLayout _trianglePipelineLayout;
+	VkPipeline _trianglePipeline;
+	VkPipeline _redTrianglePipeline;
+
+	// Shaders
+
+	int _selectedShader { 0 };
+
 public:
 
 	bool _isInitialized{ false };
@@ -59,11 +97,16 @@ public:
 
 private:
 
+	// Init
 	void _init_vulkan();
 	void _init_swapchain();
 	void _init_commands();
 	void _init_default_renderpass();
 	void _init_framebuffers();
 	void _init_sync_structures();
+	void _init_pipelines();
+	
+	// Shaders
+	bool _load_shader_module(const char* filePath, VkShaderModule* outShaderModule);
 
 };
