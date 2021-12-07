@@ -6,6 +6,13 @@
 #include <vk_types.h>
 #include <vk_mesh.h>
 
+#include <glm/glm.hpp>
+
+struct MeshPushConstants {
+	glm::vec4 data;
+	glm::mat4 render_matrix;
+};
+
 struct PipelineBuilder {
 	std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
 	VkPipelineVertexInputStateCreateInfo _vertexInputInfo;
@@ -68,10 +75,12 @@ public:
 
 	// Graphics Pipeline
 	VkPipelineLayout _trianglePipelineLayout;
+	VkPipelineLayout _meshPipelineLayout;
 	VkPipeline _trianglePipeline;
 	VkPipeline _redTrianglePipeline;
 	VkPipeline _meshPipeline;
 	Mesh _triangleMesh;
+	Mesh _monkeyMesh;
 
 	// Shaders
 	int _selectedShader { 0 };

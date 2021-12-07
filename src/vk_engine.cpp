@@ -15,6 +15,9 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
+#include <glm/gtx/transform.hpp>
+
+
 #define VK_CHECK(x)                                                 \
 	do                                                              \
 	{                                                               \
@@ -320,6 +323,20 @@ void VulkanEngine::_init_pipelines()
 	pipelineBuilder._shaderStages.push_back(
 		vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT, triangleFragShader));
 
+	VkPipelineLayoutCreateInfo mesh_pipeline_layout_info = vkinit::pipeline_layout_create_info();
+
+	VkPushConstantRange push_constant;
+	push_constant.offset = 0;
+	push_constant.size = sizeof(MeshPushConstants);
+	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	
+	mesh_pipeline_layout_info.pPushConstantRanges = &push_constant;
+	mesh_pipeline_layout_info.pushConstantRangeCount = 1;
+
+	VK_CHECK(vkCreatePipelineLayout(_device, &mesh_pipeline_layout_info, nullptr, &_meshPipelineLayout));
+
+	pipelineBuilder._pipelineLayout = _meshPipelineLayout;
+
 	_meshPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
 
 	vkDestroyShaderModule(_device, meshVertShader, nullptr);
@@ -334,6 +351,7 @@ void VulkanEngine::_init_pipelines()
 		vkDestroyPipeline(_device, _meshPipeline, nullptr);
 
 		vkDestroyPipelineLayout(_device, _trianglePipelineLayout, nullptr);
+		vkDestroyPipelineLayout(_device, _meshPipelineLayout, nullptr);
 	});
 }
 
@@ -351,7 +369,10 @@ void VulkanEngine::_load_meshes()
 	_triangleMesh._vertices[1].color = { 0.f, 1.f, 0.0f }; //pure green
 	_triangleMesh._vertices[2].color = { 0.f, 1.f, 0.0f }; //pure green
 
+	_monkeyMesh.load_from_obj("../../assets/dragon_tri.obj");
+
 	_upload_mesh(_triangleMesh);
+	_upload_mesh(_monkeyMesh);
 }
 
 void VulkanEngine::_upload_mesh(Mesh& mesh)
@@ -418,6 +439,8 @@ bool VulkanEngine::_load_shader_module(const char* filePath, VkShaderModule* out
 void VulkanEngine::cleanup()
 {	
 	if (_isInitialized) {
+		vmaDestroyAllocator(_allocator);
+
 		vkWaitForFences(_device, 1, &_renderFence, true, 1000000000);
 
 		_mainDeletionQueue.flush();
@@ -453,8 +476,7 @@ void VulkanEngine::draw()
 	VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
 
 	VkClearValue clearValue;
-	float flash = abs(sin(_frameNumber / 120.f));
-	clearValue.color = { { 0.0f, 0.0f, flash, 1.0f } };
+	clearValue.color = { { 0.5f, 0.5f, 0.5, 1.0f } };
 
 	VkRenderPassBeginInfo rpInfo = {};
 	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -473,9 +495,30 @@ void VulkanEngine::draw()
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipeline);
 	
 	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &_triangleMesh._vertexBuffer._buffer, &offset);
+	vkCmdBindVertexBuffers(cmd, 0, 1, &_monkeyMesh._vertexBuffer._buffer, &offset);
 
-	vkCmdDraw(cmd, _triangleMesh._vertices.size(), 1, 0, 0);
+	    //make a model view matrix for rendering the object
+    //camera position
+    glm::vec3 camPos = { 0.f,0.f,-2.f };
+
+    glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
+    //camera projection
+    glm::mat4 projection = glm::perspective(glm::radians(70.f), 1700.f / 900.f, 0.1f, 200.0f);
+    projection[1][1] *= -1;
+    //model rotation
+    glm::mat4 model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(_frameNumber * 0.1f), glm::vec3(0, 1, 0));
+
+    //calculate final mesh matrix
+    glm::mat4 mesh_matrix = projection * view * model;
+
+    MeshPushConstants constants;
+    constants.render_matrix = mesh_matrix;
+
+    //upload the matrix to the GPU via push constants
+    vkCmdPushConstants(cmd, _meshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+
+    //we can now draw
+    vkCmdDraw(cmd, _monkeyMesh._vertices.size(), 1, 0, 0);
 
 	// Stop Recording Commands
 	vkCmdEndRenderPass(cmd);
