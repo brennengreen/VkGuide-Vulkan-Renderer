@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vk_types.h>
+#include <vk_mesh.h>
 
 struct PipelineBuilder {
 	std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
@@ -69,10 +70,14 @@ public:
 	VkPipelineLayout _trianglePipelineLayout;
 	VkPipeline _trianglePipeline;
 	VkPipeline _redTrianglePipeline;
+	VkPipeline _meshPipeline;
+	Mesh _triangleMesh;
 
 	// Shaders
-
 	int _selectedShader { 0 };
+
+	// Memory Allocater
+	VmaAllocator _allocator;
 
 public:
 
@@ -108,5 +113,9 @@ private:
 	
 	// Shaders
 	bool _load_shader_module(const char* filePath, VkShaderModule* outShaderModule);
+
+	// Meshes
+	void _load_meshes();
+	void _upload_mesh(Mesh& mesh);
 
 };
